@@ -1,4 +1,6 @@
 import modelo.*;
+import persistencia.*;
+import patron.*;
 import java.time.LocalDate;
 
 public class Parcial {
@@ -7,47 +9,52 @@ public class Parcial {
 
         try {
 
-            LocalDate fecha = LocalDate.of(2026, 11, 30);
+            Conexion.crearTablas();
 
-            Trabajador t1 = new EmpleadoPlanta(
-                "1012345678", "Juan",
-                LocalDate.of(2019, 3, 15), 2700000);
+            TrabajadorDAO dao = new TrabajadorDAOI();
 
-            Trabajador t2 = new EmpleadoPlanta(
-                "52123456", "Maria",
-                LocalDate.of(2024, 12, 1), 2900000);
+            LiquidacionDAO daoL = new LiquidacionDAOI();
 
-            Trabajador t3 = new Contratista(
-                "80765432", "Carlos",
-                LocalDate.of(2025, 1, 10), 9500000);
+            Liquidador liquidador = new Liquidador(daoL);
 
-            Trabajador t4 = new EmpleadoHoras(
-                "1033221100", "Ana",
-                LocalDate.of(2014, 6, 30), 182, 22000);
+            ContabilidadObserver contabilidad =
+                new ContabilidadObserver();
 
-            Trabajador[] trabajadores = {t1, t2, t3, t4};
+            AlertaObserver alerta = new AlertaObserver();
 
-            double totalNomina = 0;
+            liquidador.agregarObservador(contabilidad);
+            liquidador.agregarObservador(alerta);
 
-            for (Trabajador t : trabajadores) {
+            Trabajador t = new Contratista(
+                "80765432",
+                "Carlos",
+                LocalDate.of(2025, 1, 10),
+                9500000
+            );
 
-                Liquidacion l = new Liquidacion(t, fecha);
+            if (dao.buscar(t.getDocumento()) == null) {
 
-                System.out.println("Nombre: " + t.getNombre());
-                System.out.println("Tipo: " + t.getTipo());
-                System.out.println("Pago: " + l.getPago());
-                System.out.println("Bono: " + l.getBono());
-                System.out.println("Total: " + l.getTotal());
-                System.out.println("-------------------");
-
-                totalNomina = totalNomina + l.getTotal();
+                dao.guardar(t);
             }
 
-            System.out.println("Total nomina: " + totalNomina);
+            Liquidacion l = liquidador.liquidar(
+                t, LocalDate.of(2026, 11, 30));
+
+            System.out.println("Nombre: " + t.getNombre());
+            System.out.println("Pago: " + l.getPago());
+            System.out.println("Bono: " + l.getBono());
+            System.out.println("Total: " + l.getTotal());
+
+            System.out.println(alerta.getMensaje());
+
+            System.out.println("-------------------");
+
+            System.out.println("Total de la sesion: "
+                + contabilidad.getTotalSesion());
 
         } catch (Exception e) {
 
-            System.out.println(e.getMessage());
+            System.out.println("Error: " + e.getMessage());
         }
     }
 }
