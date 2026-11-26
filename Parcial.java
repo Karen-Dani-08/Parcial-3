@@ -1,60 +1,32 @@
-import modelo.*;
-import persistencia.*;
-import patron.*;
-import java.time.LocalDate;
+import persistencia.Conexion;
+import vista.Visual;
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 
 public class Parcial {
 
     public static void main(String[] args) {
 
-        try {
+        SwingUtilities.invokeLater(() -> {
 
-            Conexion.crearTablas();
+            try {
 
-            TrabajadorDAO dao = new TrabajadorDAOI();
+                Conexion.crearTablas();
 
-            LiquidacionDAO daoL = new LiquidacionDAOI();
+                Visual ventana =
+                    new Visual();
 
-            Liquidador liquidador = new Liquidador(daoL);
+                ventana.setVisible(true);
 
-            ContabilidadObserver contabilidad =
-                new ContabilidadObserver();
+            } catch (Exception e) {
 
-            AlertaObserver alerta = new AlertaObserver();
-
-            liquidador.agregarObservador(contabilidad);
-            liquidador.agregarObservador(alerta);
-
-            Trabajador t = new Contratista(
-                "80765432",
-                "Carlos",
-                LocalDate.of(2025, 1, 10),
-                9500000
-            );
-
-            if (dao.buscar(t.getDocumento()) == null) {
-
-                dao.guardar(t);
+                JOptionPane.showMessageDialog(
+                    null,
+                    e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE
+                );
             }
-
-            Liquidacion l = liquidador.liquidar(
-                t, LocalDate.of(2026, 11, 30));
-
-            System.out.println("Nombre: " + t.getNombre());
-            System.out.println("Pago: " + l.getPago());
-            System.out.println("Bono: " + l.getBono());
-            System.out.println("Total: " + l.getTotal());
-
-            System.out.println(alerta.getMensaje());
-
-            System.out.println("-------------------");
-
-            System.out.println("Total de la sesion: "
-                + contabilidad.getTotalSesion());
-
-        } catch (Exception e) {
-
-            System.out.println("Error: " + e.getMessage());
-        }
+        });
     }
 }
